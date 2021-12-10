@@ -1,0 +1,232 @@
+
+#install.packages("RODBC")
+#library(RODBC)
+library(tidyverse)
+
+con <- odbcConnectAccess2007('Data/UA_DB_AU.accdb')
+
+UA_CON <- sqlTables(con)
+
+UA <- sqlFetch(con, 'STAMTABEL')
+
+odbcClose(con)
+
+
+#DataProcessing
+UA_Argentina <- UA %>% 
+  filter(DEST_LAND == "Argentina")
+
+UA_Argentina %>% 
+  count(DEST_BY,sort = TRUE)
+
+#Visulalisering
+#which city did they go to visualized
+UA_Argentina %>% 
+  count(DEST_BY,sort = TRUE) %>%
+  ggplot(aes(x=DEST_BY,y=n))+
+  geom_col()
+
+#their age
+UA_Argentina %>% 
+  count(Alder,sort = TRUE) %>%
+  ggplot(aes(x=Alder,y=n))+
+  geom_col()
+
+#rfordatascience
+
+#Same code on profession. 
+UA_Argentina %>% 
+  count(Stilling,sort = TRUE) %>%
+  ggplot(aes(x=Stilling,y=n))+
+  geom_col()
+#You cant see anything on it therefor i clean up below. 
+
+
+#Derfor bruger jeg de 10 hyppigste erhverv
+UA_Argentina %>% 
+  count(Stilling,sort = TRUE) %>%
+  top_n(10) %>% 
+  ggplot(aes(x=Stilling,y=n))+
+  geom_col()
+
+
+#cleaning up the data
+UA_Argentina %>% 
+  count(Stilling,sort = TRUE) %>%
+  top_n(10) %>% 
+  mutate(Stilling=reorder(Stilling,n)) %>% 
+  ggplot(aes(x=Stilling,y=n))+
+  geom_col()
+# We turn the table to make it faar easier to read.
+UA_Argentina %>% 
+  count(Stilling,sort = TRUE) %>%
+  top_n(10) %>% 
+  mutate(Stilling=reorder(Stilling,n)) %>% 
+  ggplot(aes(x=Stilling,y=n))+
+  geom_col()+
+  coord_flip()
+
+#Which year they emigrated
+UA_Argentina %>% 
+  count(AarNum,sort = TRUE) %>%
+  ggplot(aes(x=AarNum,y=n))+
+  geom_col()
+
+#which sex emigrated most:
+
+UA_Argentina %>% 
+  count(K?n,sort = TRUE) %>%
+  ggplot(aes(x=K?n,y=n))+
+  geom_col()
+
+#Var det fra specielle sogn?
+UA_Argentina %>% 
+  count(SOS_SOGN,sort = TRUE) %>%
+  top_n(10) %>% 
+  mutate(SOS_SOGN=reorder(SOS_SOGN,n)) %>% 
+  ggplot(aes(x=SOS_SOGN,y=n))+
+  geom_col()+
+  coord_flip()
+
+#The 5 most popular emigration destinations for the whole table.
+UA %>% 
+  count(DEST_LAND,sort = TRUE) %>%
+  top_n(5)
+  
+UA %>% 
+  count(DEST_LAND,sort = TRUE) %>%
+  top_n(5) %>% 
+  ggplot(aes(x=DEST_LAND,y=n))+
+  geom_col()+
+  coord_flip()
+
+UA %>% 
+  count(DEST_LAND,sort = TRUE) %>%
+  top_n(5) %>% 
+  mutate(DEST_LAND=reorder(DEST_LAND,n)) %>% 
+  ggplot(aes(x=DEST_LAND,y=n))+
+  geom_col()+
+  coord_flip()
+
+#Place of birth for the 4755 observations that emigrated to Argentina
+UA_Argentina %>% 
+  count(FST_LAND,sort = TRUE)%>%
+  top_n(5)
+
+UA_Argentina %>% 
+  count(FST_LAND,sort = TRUE) %>%
+  top_n(5) %>% 
+  mutate(FST_LAND=reorder(FST_LAND,n)) %>% 
+  ggplot(aes(x=FST_LAND,y=n))+
+  geom_col()+
+  coord_flip()+
+  labs(x = "Place of birth",
+       y = "count",
+       title = "Nationality")
+
+#Many of the NA's we see are danes, that just lack information, this was to see how many
+#Was from Sweeden and Norway, which is not alot. 
+
+#Professions for emigrants en general. 
+UA %>% 
+  count(Stilling,sort = TRUE) %>%
+  top_n(15) %>% 
+  mutate(Stilling=reorder(Stilling,n)) %>% 
+  ggplot(aes(x=Stilling,y=n))+
+  geom_col()+
+  coord_flip()
+
+# Lets try to compare the data to USA. 
+UA_USA <- UA %>% 
+  filter(DEST_LAND == "USA")
+
+#sex argentina argentina vs
+UA_Argentina %>% 
+  count(K?n,sort = TRUE) %>%
+  ggplot(aes(x=K?n,y=n))+
+  geom_col()+
+  labs(x = "k?n",
+       y = "Count",
+       title = "Sex Argentina")
+
+  
+#Koen USA
+UA_USA %>% 
+  count(f?deste,sort = TRUE) %>%
+  ggplot(aes(x=K?n,y=n))+
+  geom_col()+
+  labs(x = "k?n",
+       y = "Count",
+       title = "Sex USA")
+
+#Most popular years for emigration
+UA_Argentina %>%
+  count(AarNum, DEST_LAND, sort = TRUE) %>%
+  top_n(30) %>%
+  mutate(AarNum = reorder(AarNum, n)) %>%
+  ggplot(aes(x = AarNum, y = n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  facet_wrap(~ DEST_LAND) +
+  labs(x = "AarNum",
+       y = "Count",
+       title = "Year of emigration")
+
+UA_Argentina %>% 
+  count(Fødested,sort = TRUE) %>%
+  ggplot(aes(x=Fødested,y=n))+
+  geom_col()
+
+
+#Fødested Amt
+UA_Argentina %>%
+  count(FST_AMT, DEST_LAND, sort = TRUE) %>%
+  top_n(20) %>%
+  mutate(FST_AMT = reorder(FST_AMT, n)) %>%
+  ggplot(aes(x = FST_AMT, y = n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  facet_wrap(~ DEST_LAND) +
+  labs(x = "Amt",
+       y = "Antal",
+       title = "Fødested amt")
+
+#sidste opgholdssted
+UA_Argentina %>%
+  count(SOS_AMT, DEST_LAND, sort = TRUE) %>%
+  top_n(20) %>%
+  mutate(SOS_AMT = reorder(SOS_AMT, n)) %>%
+  ggplot(aes(x = SOS_AMT, y = n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  facet_wrap(~ DEST_LAND) +
+  labs(x = "Amt",
+       y = "Antal",
+       title = "Sidste opholdssted")
+
+#Indikerer at mange er rejst til københavn og derfra er udvandret. med urbaniseringen. 
+
+UA_Argentina %>%
+  count(Alder, DEST_LAND, sort = TRUE) %>%
+  top_n(30) %>%
+  mutate(Alder = reorder(Alder, n)) %>%
+  ggplot(aes(x = Alder, y = n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  facet_wrap(~ DEST_LAND) +
+  labs(x = "Alder",
+       y = "Count",
+       title = "Udvandrernes alder")
+
+#Stilling
+UA_Argentina %>% 
+  count(Stilling,sort = TRUE) %>%
+  top_n(20) %>% 
+  mutate(Stilling=reorder(Stilling,n)) %>% 
+  ggplot(aes(x=Stilling,y=n))+
+  geom_col()+
+  coord_flip()
